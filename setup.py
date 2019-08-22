@@ -9,6 +9,7 @@ setup(
     author_email="joona@unmoon.com",
     description="Simple VLC-based server that syncs video playback for clients.",
     packages=find_packages(where="src"),
-    package_dir={"movienightserver": "src"},
+    package_dir={"movienightserver": "src/movienightserver"},
+    entry_points={"console_scripts": ["movienightserver=movienightserver.main:main"]},
     install_requires=[],
 )
