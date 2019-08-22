@@ -52,6 +52,8 @@ class SyncHandler(socketserver.BaseRequestHandler):
 
 
 class ThreadedTCPServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
+    allow_reuse_address = True
+
     def __init__(self, *args, **kwargs):
         super(ThreadedTCPServer, self).__init__(*args, **kwargs)
         self.lock = threading.Lock()
