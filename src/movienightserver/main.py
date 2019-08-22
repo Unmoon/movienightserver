@@ -61,7 +61,7 @@ class ThreadedTCPServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
 
 
 def main():
-    with ThreadedTCPServer(("localhost", 9512), SyncHandler) as server:
+    with ThreadedTCPServer(("0.0.0.0", 9512), SyncHandler) as server:
         server_thread = threading.Thread(target=server.serve_forever)
         server_thread.daemon = True
         server_thread.start()
