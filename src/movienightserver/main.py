@@ -13,7 +13,7 @@ class SyncHandler(socketserver.BaseRequestHandler):
             if self not in self.server.clients:
                 with self.server.lock:
                     self.server.clients.append(self)
-                    log.debug("Added a new client: %s", self)
+                    log.debug("Added a new client: %s", self.client_address)
                     log.debug("Total clients: %i", len(self.server.clients))
 
             while True:
