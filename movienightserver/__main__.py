@@ -2,9 +2,9 @@ import logging
 import socketserver
 import struct
 import threading
-from time import sleep
+import time
 
-log = logging.getLogger(__name__)
+log = logging.getLogger("movienightserver")
 
 
 class SyncHandler(socketserver.BaseRequestHandler):
@@ -19,14 +19,16 @@ class SyncHandler(socketserver.BaseRequestHandler):
             while True:
                 data = self.request.recv(1024)
                 log.debug("%s: %s", self.client_address[0], data)
-                setting, playing, time = struct.unpack(">??I", data)
+                setting, playing, time, heartbeat = struct.unpack(">??I?", data)
+
+                if heartbeat:
+                    log.debug("Heartbeat received")
+                    continue
 
                 if not setting:
                     log.debug("Getting")
                     with self.server.lock:
-                        self.request.sendall(
-                            struct.pack(">?I", self.server.playing, self.server.time)
-                        )
+                        self.request.sendall(struct.pack(">?I?", self.server.playing, self.server.time, False))
                 else:
                     with self.server.lock:
                         self.server.time = time
@@ -39,15 +41,13 @@ class SyncHandler(socketserver.BaseRequestHandler):
                         for client in self.server.clients:
                             if self == client:
                                 continue
-                            client.request.sendall(
-                                struct.pack(
-                                    ">?I", self.server.playing, self.server.time
-                                )
-                            )
+                            client.request.sendall(struct.pack(">?I?", self.server.playing, self.server.time, False))
+        except ConnectionError:
+            pass
         finally:
             with self.server.lock:
                 self.server.clients.remove(self)
-                log.debug("Removed a client: %s", self)
+                log.debug("Removed a client: %s", self.client_address)
                 log.debug("Total clients: %i", len(self.server.clients))
 
 
@@ -60,6 +60,20 @@ class ThreadedTCPServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
         self.time = 0
         self.playing = False
         self.clients = []
+        self.heartbeat_thread = threading.Thread(target=self.heartbeat)
+        self.heartbeat_thread.daemon = True
+        self.heartbeat_thread.start()
+
+    def heartbeat(self):
+        log.debug("Heartbeat thread started.")
+        while True:
+            if self.clients:
+                with self.lock:
+                    log.debug("Sending heartbeat...")
+                    for client in self.clients:
+                        client.request.sendall(struct.pack(">?I?", self.playing, self.time, True))
+                    log.debug("Heartbeat sent!")
+            time.sleep(60)
 
 
 def main():
@@ -67,5 +81,8 @@ def main():
         server_thread = threading.Thread(target=server.serve_forever)
         server_thread.daemon = True
         server_thread.start()
-        while True:
-            sleep(1)
+        server_thread.join()
+
+
+if __name__ == "__main__":
+    main()

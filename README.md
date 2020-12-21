@@ -16,7 +16,7 @@ venv\Scripts\activate
 `-e` allows editing the application without having to reinstall it.
 ```shell script
 pip install -e .
-movienight
+movienightserver
 ```
 
 ## Codestyle
@@ -25,7 +25,5 @@ This project uses [Black](https://github.com/psf/black) for code formatting.
 
 ```shell script
 pip install black
-black movienight/
-black setup.py
-black main.spec
+black .
 ```

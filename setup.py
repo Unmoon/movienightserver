@@ -10,5 +10,5 @@ setup(
     description="Simple server that syncs video playback for clients using Movie Night.",
     packages=find_packages(where=""),
     package_dir={"movienightserver": "movienightserver"},
-    entry_points={"console_scripts": ["movienightserver=movienightserver.main:main"]},
+    entry_points={"console_scripts": ["movienightserver=movienightserver.__main__:main"]},
 )
